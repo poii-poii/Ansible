@@ -1,0 +1,128 @@
+---
+- name: Hardening Linux!
+  hosts: Jupiter
+  become: yes
+  tasks:
+
+   - name: Mise a jour des paquets
+     package:
+       name: "*"
+       state: latest
+
+   - name: Ajout de mot de passe bootloader
+     lineinfile:
+       path: /etc/grub.d/00_header ## Ici on utilise le HASH de notre mdp
+       line: "cat << EOF\nset superusers='root'\npassword_pbkdf2 root grub.pbkdf2.sha512.10000.04CBCD9313231A5C0560DD13093F68207138BCAC8D4CBDD9C8CCDC25034A53849346F498244B2806F55301DAA174B6A75EE8A2878F4C3C27E99053C0ADD06CE2.B7211F252BE59224ABC05C0A6D273FECA45DCFD8DDF3F108758197918707E5709AE0810CD9CCF6424ED5A61BA7666274173FCC7EBC1059E6DD4C6818B1F78976\nEOF"
+       insertafter: EOF
+
+   - name: Modification parametres d'amorcage du noyau
+     lineinfile:
+       path: /etc/default/grub
+       regexp: '^GRUB_CMDLINE_LINUX_DEFAULT' ## Parametres d'ammorcage du noyau
+       line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on page_poison=1 pti=on slab_nomerge=yes slub_debug=FZP spec_store_bypass_disable=seccomp spectre_v2=on mds=full,nosmt mce=o page_alloc.shuffle=1 rng_core.default_quality=500 security=yama ipv6.disable=1"'
+
+   - name: Maj Bootloader
+     command: update-grub
+
+   - name: Modification parametres Sysctl
+     lineinfile:
+       dest: /etc/sysctl.conf
+       line: "{{ item.key }} = {{ item.value }}"
+       state: present
+     with_items:       ### NOYAU ###
+       - { key: 'kernel.dmesg_restrict', value: '1' } # Restreint l'acces au buffer dmesg
+       - { key: 'kernel.kptr_restrict', value: '2' } # Cache les adresses noyau dans /proc pour tout les users
+       - { key: 'kernel.pid_max', value: '65536' } # Specifie l'espace d'identifiants de proc supporte par le kernel
+       - { key: 'kernel.perf_cpu_time_max_percent', value: '1' } # Restraint l'utilisation du sous-systeme perf
+       - { key: 'kernel.perf_event_max_sample_rate', value: '1' }
+       - { key: 'kernel.perf_event_paranoid', value: '2' } 
+       - { key: 'kernel.randomize_va_space', value: '2' } # Active l'ASL
+       - { key: 'kernel.sysrq', value: '0' } # Desactive combinaison touches magiques
+       - { key: 'kernel.unprivileged_bpf_disabled', value: '1' } # Restraint l'usage du BPF noyau aux superusers
+       - { key: 'kernel.panic_on_oops', value: '1' } # Arrete completement le systeme en cas de comportement inattendu du kernel
+       - { key: 'kernel.yama.ptrace_scope', value: '1' } # Charge le module YAMA
+                       ### RESEAU ### 
+       - { key: 'net.core.bpf_jit_harden', value: '2' } # Attenuation de l'efft de dispersion du JIT noyau
+       - { key: 'net.ipv4.ip_forward', value: '0' } # On s'assure que l'IP forwarding est desactive
+       - { key: 'net.ipv4.conf.all.accept_redirects', value: '0' } # Refuse la reception de paquets ICMP redirect 
+       - { key: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+       - { key: 'net.ipv4.conf.all.secure_redirects', value: '0' }
+       - { key: 'net.ipv4.conf.all.shared_media', value: '0' }
+       - { key: 'net.ipv4.conf.default.shared_media', value: '0' }
+       - { key: 'net.ipv4.conf.all.accept_source_route', value: '0' } # Refuse les infos d'en-tetes de source routing 
+       - { key: 'net.ipv4.conf.default.accept_source_route', value: '0' }
+       - { key: 'net.ipv4.conf.all.arp_filter', value: '1' }
+       - { key: 'net.ipv4.conf.all.arp_ignore', value: '2' }
+       - { key: 'net.ipv4.conf.all.route_localnet', value: '0' } # 
+       - { key: 'net.ipv4.conf.all.drop_gratuitous_arp', value: '1' }
+       - { key: 'net.ipv4.conf.default.rp_filter', value: '1' }
+       - { key: 'net.ipv4.conf.all.rp_filter', value: '1' }
+       - { key: 'net.ipv4.conf.default.send_redirects', value: '0' }
+       - { key: 'net.ipv4.conf.all.send_redirects', value: '0' }
+       - { key: 'net.ipv4.icmp_ignore_bogus_error_responses', value: '1' } # Ignorer les reponses non conformes à RFC1122
+       - { key: 'net.ipv4.ip_local_port_range', value: '32768 65535' } # Augment la plage de ports ephemeres
+       - { key: 'net.ipv4.tcp_rfc1337', value: '1' } # RFC 1337
+       - { key: 'net.ipv4.tcp_syncookies', value: '1' } # Utilises les SYN cookies pour se proteger contre les SYN floods
+                       ### SYSTEME FICHIER ### 
+       - { key: 'fs.suid_dumpable', value: '0' } # Desactive la creation e coredump pour les executables setuid 
+       - { key: 'fs.protected_fifos', value: '2' } # Interdit l'ouverture des FIFOS
+       - { key: 'fs.protected_regular', value: '2' }
+       - { key: 'fs.protected_symlinks', value: '1' } # Restraint la creation de liens symboliques à des fichiers dont l'user est proprietaire
+       - { key: 'fs.protected_hardlinks', value: '1' } # Restraint la creation de liens durs cf Time of Check / Time of Use
+
+
+   - name: Reload sysctl 
+     shell: sysctl -p
+
+   - name: Supression des comptes inutiles
+     user:
+       name: "{{ item }}"
+       state: absent
+     loop:
+       - ftp
+       - games
+       - news
+       - uucp
+
+   - name: Maj UMASK # Change l'UMASK par defaut
+     lineinfile:
+       path: /etc/login.defs
+       regexp: '^UMASK\s+.*'
+       line: 'UMASK            0027'
+       state: present
+                        ### PAM.d ###
+   - name: Verification du chiffrage mdp
+     lineinfile:
+       dest: /etc/pam.d/common-password
+       line: "password required pam_unix.so obscure yescrypt rounds=11"
+       state: present
+
+                      ### AuditD ### 
+   - name: Install Auditd
+     apt:
+       name: auditd
+       state: present
+
+   - name: Change la config Auditd 
+     lineinfile:
+       dest: /etc/audit/audit.rules
+       line: "{{ item }}"
+       state: present
+     with_items: 
+       - "-w /sbin/insmod -p x" # Log lexecution de insmod + rmmod + modprobe + kmod
+       - "-w /sbin/modprobe -p x" 
+       - "-w /sbin/rmmod -p x" 
+       - "-w /bin/kmod -p x"   
+       - "-w /etc/ -p wa" # Log les modifs dans /etc/
+       - "-a exit,always -S mount -S unmount2" # Log montage/demontage
+       - "-a exit,always -S ioperm -S modify_ldt" # Appel de syscalls x86 suspects 
+       - "-a exit,always -S get_kernel_syms -S ptrace" # Appel de syscalls importants
+       - "-a exit,always -S prctl" 
+       - "-a exit,always -F arch=b64 -S unlink -S rmdir -S rename" # Log creation/supression fichier
+       - "-a exit,always -F arch=b64 -S creat -S open -S openat -F exit=-EACCES" # Attention perte de perf!
+       - "-a exit,always -F arch=b64 -S truncate -S ftruncate -F exit=-EACESS"
+       - "-a exit,always -F arch=b64 -S init_module -S delete_module" # log chargement/dechargement module noyau
+       - "-a exit,always -F arch=b64 -S init_module"
+       - "-e 2"  # Verouillage de la conf d'auditd
+
+
