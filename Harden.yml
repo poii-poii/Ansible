@@ -12,7 +12,7 @@
    - name: Ajout de mot de passe bootloader
      lineinfile:
        path: /etc/grub.d/00_header ## Ici on utilise le HASH de notre mdp
-       line: "cat << EOF\nset superusers='root'\npassword_pbkdf2 root grub.pbkdf2.sha512.10000.04CBCD9313231A5C0560DD13093F68207138BCAC8D4CBDD9C8CCDC25034A53849346F498244B2806F55301DAA174B6A75EE8A2878F4C3C27E99053C0ADD06CE2.B7211F252BE59224ABC05C0A6D273FECA45DCFD8DDF3F108758197918707E5709AE0810CD9CCF6424ED5A61BA7666274173FCC7EBC1059E6DD4C6818B1F78976\nEOF"
+       line: "cat << EOF\nset superusers='root'\npassword_pbkdf2 root HASH.HERE\nEOF"
        insertafter: EOF
 
    - name: Modification parametres d'amorcage du noyau
