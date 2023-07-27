@@ -1,6 +1,7 @@
 ---
 - name: Installing my basic system utilities
   hosts: localhost
+  become: yes
   tasks:
 
 
