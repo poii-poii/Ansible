@@ -2,14 +2,8 @@
 - name: Installing my basic system utilities
   hosts: localhost
   become: yes
-  roles:
-      - jaredhocutt.google-chrome
-
 
   tasks:
-   - name: Install the Ansible galaxy role jaredhocutt.google-chrome and use it
-     ansible.builtin.command: ansible-galaxy install jaredhocutt.google-chrome --ignore-errors
-       --force
 
    - name: Create the user Poiipoii with sudo privileges
      ansible.builtin.user:
