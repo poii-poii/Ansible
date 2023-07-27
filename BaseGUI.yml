@@ -9,7 +9,7 @@
        name: poiipoii
        state: present
        createhome: true
-       groups: sudo
+       groups: wheel
        append: true
        shell: /bin/bash
   
