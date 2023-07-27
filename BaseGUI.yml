@@ -24,6 +24,7 @@
        name:
          - vim
          - git
+         - yay
        state: present
   
    - name: Install i3 window manager
@@ -31,6 +32,7 @@
        name:
          - i3-wm
          - i3lock
+         - i3status
        state: present
     
    - name: Install kitty terminal
