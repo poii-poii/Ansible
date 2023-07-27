@@ -44,9 +44,9 @@
        name: obsidian
        state: present
 
-    - name: Install Google Chrome with yay
-      command: yay -S google-chrome
-      ignore_errors: yes
+   - name: Install Google Chrome with yay
+     command: yay -S google-chrome
+     ignore_errors: yes
 
 
 
