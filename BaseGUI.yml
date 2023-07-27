@@ -50,8 +50,10 @@
        name: obsidian
        state: present
    - name: Install google-chrome with yay
-     aur_packages:
-      - google-chrome
+     community.general.pacman:
+       name: google-chrome
+       state: present 
+       executable: yay
   
 
 
