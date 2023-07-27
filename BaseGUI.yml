@@ -1,10 +1,48 @@
 ---
 - name: Installing my basic system utilities
-  hosts: Jupiter
   become: yes
   tasks:
   
+   - name: Create the user Poiipoii with sudo privileges
+     ansible.builtin.user:
+       name: poiipoii
+       state: present
+       createhome: true
+       groups: sudo
+       append: true
+       shell: /bin/bash
    - name: Full system upgrade with pacman
-     package:
-       name: "*"
-       state: latest
+     community.general.pacman:
+       update_cache: true
+       upgrade: true
+ 
+   - name: Install i3 window manager
+     community.general.pacman:
+       name:
+         - i3-wm
+         - i3lock
+       state: present
+    
+   - name: Install kitty terminal
+     community.general.pacman:
+       name:
+         - kitty
+       state: present
+   - name: Install obsidian
+     community.general.pacman:
+       name: obsidian
+       state: present
+   - name: Install google-chrome
+     community.general.pacman:
+       name: google-chrome
+       state: present
+
+
+
+
+
+
+
+    
+
+
