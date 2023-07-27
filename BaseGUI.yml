@@ -44,13 +44,10 @@
        state: present
   
    - name: Install google-chrome with yay
-     kewlfft.aur.aur:
+     community.general.yay:
        name: google-chrome
-       use: yay
        state: present
-     become: true
-     become_user: aur_builder
-
+  
 
 
 
