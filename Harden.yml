@@ -5,6 +5,9 @@
   tasks:
 
    - name: Mise a jour des paquets
+     ansible.builtin.apt:
+       update_cache: true
+       cache_valid_time: 3600
      package:
        name: "*"
        state: latest
@@ -72,8 +75,8 @@
 
 
    - name: Reload sysctl 
-     shell: sysctl -p
-
+     ansible.builtin.command: sysctl -p
+    
    - name: Supression des comptes inutiles
      user:
        name: "{{ item }}"
