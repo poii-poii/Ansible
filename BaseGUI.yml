@@ -4,6 +4,9 @@
   become: yes
   tasks:
   
+    roles:
+     - { role: jahrik.yay, install: true }
+
    - name: Create the user Poiipoii with sudo privileges
      ansible.builtin.user:
        name: poiipoii
@@ -42,11 +45,9 @@
      community.general.pacman:
        name: obsidian
        state: present
-  
    - name: Install google-chrome with yay
-     community.general.yay:
-       name: google-chrome
-       state: present
+     aur_packages:
+      - google-chrome
   
 
 
