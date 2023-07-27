@@ -10,7 +10,7 @@
        update_cache: true
        upgrade: true
   
-   - name: install vim and git
+   - name: install vim , git , yay
      community.general.pacman:
        name:
          - vim
@@ -28,23 +28,27 @@
          - dmenu
        state: present
     
-   - name: Install kitty terminal
+   - name: Install Kitty + zellij + exa
      community.general.pacman:
        name:
          - kitty
+         - zellij
+         - exa
+         - obsidian
        state: present
   
-   - name: Install obsidian
-     community.general.pacman:
-       name: obsidian
-       state: present
-
    - name: Install Google Chrome with yay
      become: false
      command: yay -S google-chrome --noconfirm -q
      ignore_errors: yes
 
-
+   - name: Copy .bashrc in /home/poiipoii/.bashrc
+     ansible.builtin.copy:
+       src: files/.bashrc
+       dest: /home/ano-user/.bashrc
+       owner: vagrant
+       group: vagrant
+       mode: 420
 
 
 
