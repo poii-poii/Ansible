@@ -1,5 +1,6 @@
 ---
 - name: Installing my basic system utilities
+  hosts: localhost
   become: yes
   tasks:
   
@@ -11,11 +12,19 @@
        groups: sudo
        append: true
        shell: /bin/bash
+  
    - name: Full system upgrade with pacman
      community.general.pacman:
        update_cache: true
        upgrade: true
- 
+  
+   - name: install vim and git
+     community.general.pacman:
+       name:
+         - vim
+         - git
+       state: present
+  
    - name: Install i3 window manager
      community.general.pacman:
        name:
@@ -28,10 +37,12 @@
        name:
          - kitty
        state: present
+  
    - name: Install obsidian
      community.general.pacman:
        name: obsidian
        state: present
+  
    - name: Install google-chrome
      community.general.pacman:
        name: google-chrome
