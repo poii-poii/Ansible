@@ -1,0 +1,10 @@
+---
+- name: Installing my basic system utilities
+  hosts: Jupiter
+  become: yes
+  tasks:
+  
+   - name: Full system upgrade with pacman
+     package:
+       name: "*"
+       state: latest
