@@ -40,7 +40,7 @@
        state: present
 
    - name: Install Google Chrome with yay
-     become: no
+     become: false
      command: yay -S google-chrome --noconfirm -q
      ignore_errors: yes
 
