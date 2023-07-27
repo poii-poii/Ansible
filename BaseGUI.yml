@@ -43,10 +43,14 @@
        name: obsidian
        state: present
   
-   - name: Install google-chrome
-     community.general.pacman:
+   - name: Install google-chrome with yay
+     kewlfft.aur.aur:
        name: google-chrome
+       use: yay
        state: present
+     become: true
+     become_user: aur_builder
+
 
 
 
