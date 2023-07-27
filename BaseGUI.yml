@@ -43,14 +43,10 @@
      community.general.pacman:
        name: obsidian
        state: present
-   - name: Install google-chrome with yay
-     community.general.pacman:
-       name: google-chrome
-       state: present 
-       executable: yay
-  
 
-
+    - name: Install Google Chrome with yay
+      command: yay -S google-chrome
+      ignore_errors: yes
 
 
 
